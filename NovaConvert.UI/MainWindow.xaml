@@ -1,0 +1,667 @@
+﻿<Window x:Class="NovaConvert.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:NovaConvert.UI.ViewModels"
+        xmlns:models="clr-namespace:NovaConvert.Core.Models;assembly=NovaConvert.Core"
+        mc:Ignorable="d"
+        Title="NOVA Convert"
+        Height="700" Width="1000"
+        MinHeight="580" MinWidth="850"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBgBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="Segoe UI, Segoe UI Variable Display, sans-serif"
+        AllowDrop="True"
+        Drop="Window_Drop"
+        DragOver="Window_DragOver">
+
+    <Grid>
+        <!-- Background subtle glow -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Top" Width="600" Height="200" Margin="0,-100,0,0" Opacity="0.12">
+            <Border.Background>
+                <RadialGradientBrush>
+                    <GradientStop Color="#6366F1" Offset="0" />
+                    <GradientStop Color="Transparent" Offset="1" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <Grid Margin="28,20,28,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Header -->
+                <RowDefinition Height="*" />    <!-- Content Area (Dropzone or Queue) -->
+                <RowDefinition Height="Auto" /> <!-- Bottom Action Bar -->
+            </Grid.RowDefinitions>
+
+            <!-- 1. Header Bar -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Brand & Logo -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="{Binding LogoPath}" Width="32" Height="32" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="NOVA Convert" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Every format. One place." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Header Actions -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenHistoryCommand}" Margin="0,0,8,0" Padding="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🕒" Margin="0,0,6,0" FontSize="12" />
+                            <TextBlock Text="History" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenEnginesCommand}" Margin="0,0,8,0" Padding="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚡" Margin="0,0,6,0" FontSize="12" />
+                            <TextBlock Text="Engines" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenSettingsCommand}" Margin="0,0,8,0" Padding="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚙" Margin="0,0,6,0" FontSize="12" />
+                            <TextBlock Text="Settings" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ToggleThemeCommand}" ToolTip="Toggle Light / Dark Theme" Width="34" Height="34">
+                        <TextBlock Text="◐" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- 2. Main Content Area -->
+            <Grid Grid.Row="1">
+                <!-- State A: Empty Queue Dropzone -->
+                <Border Visibility="{Binding QueueManager.TotalCount, Converter={StaticResource ZeroToVis}}"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14"
+                        SnapsToDevicePixels="True">
+                    <Grid>
+                        <!-- Dashed Inner Area -->
+                        <Border Margin="16"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="2"
+                                CornerRadius="10">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <!-- Minimal Icon -->
+                                <Border Width="64" Height="64" CornerRadius="32" Background="{DynamicResource AppCardBrush}" HorizontalAlignment="Center" Margin="0,0,0,18">
+                                    <TextBlock Text="↓" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource AppAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0" />
+                                </Border>
+
+                                <TextBlock Text="Drop files to convert" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                                <TextBlock Text="or browse your computer to select files or entire folders" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,22" />
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
+                                    <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding AddFilesCommand}" Content="Browse Files" Margin="0,0,12,0" Padding="24,10" />
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AddFolderCommand}" Content="Add Folder" Padding="20,10" />
+                                </StackPanel>
+
+                                <TextBlock Text="Supports Images, Audio, Video, Documents, PDFs, Spreadsheets, E-Books &amp; Archives" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- State B: Active File Queue -->
+                <Grid Visibility="{Binding QueueManager.TotalCount, Converter={StaticResource CountToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Queue Sub-Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Conversion Queue" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                            <Border Background="{DynamicResource AppCardBrush}" CornerRadius="10" Margin="8,0,0,0" Padding="8,2">
+                                <TextBlock Text="{Binding QueueManager.TotalCount, StringFormat='{}{0} files'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AddFilesCommand}" Margin="0,0,8,0" Padding="12,6">
+                                <TextBlock Text="+ Add More" FontSize="12" />
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ClearCompletedCommand}" Margin="0,0,8,0" Padding="12,6">
+                                <TextBlock Text="Clear Completed" FontSize="12" />
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ClearAllCommand}" Padding="12,6">
+                                <TextBlock Text="Clear All" FontSize="12" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Queue List -->
+                    <Border Grid.Row="1" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="12">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                            <ItemsControl ItemsSource="{Binding QueueManager.Queue}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource AppCardBrush}"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="10"
+                                                Margin="0,0,0,8"
+                                                Padding="14,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" /> <!-- Category Badge -->
+                                                    <ColumnDefinition Width="*" />    <!-- File Details & Warning -->
+                                                    <ColumnDefinition Width="Auto" /> <!-- Target Format Selector -->
+                                                    <ColumnDefinition Width="180" />  <!-- Status & Progress -->
+                                                    <ColumnDefinition Width="Auto" /> <!-- Actions (Gear, Delete) -->
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Category Badge -->
+                                                <Border Grid.Column="0"
+                                                        Background="{Binding Category, Converter={StaticResource CategoryToBadge}}"
+                                                        BorderBrush="{DynamicResource AppBorderBrush}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="6"
+                                                        Padding="8,4"
+                                                        Margin="0,0,12,0"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding SourceFormat.PrimaryExtension}"
+                                                               FontWeight="Bold"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                </Border>
+
+                                                <!-- File Name & Info -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                    <TextBlock Text="{Binding FileName}"
+                                                               FontWeight="Medium"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock Text="{Binding FormattedSourceSize}"
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                        <TextBlock Text=" → "
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                                   Visibility="{Binding OutputSizeBytes, Converter={StaticResource CountToVis}}" />
+                                                        <TextBlock Text="{Binding FormattedOutputSize}"
+                                                                   FontSize="11"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource SuccessBrush}"
+                                                                   Visibility="{Binding OutputSizeBytes, Converter={StaticResource CountToVis}}" />
+                                                    </StackPanel>
+
+                                                    <!-- Extension Mismatch Notice -->
+                                                    <Border Visibility="{Binding HasExtensionMismatch, Converter={StaticResource BoolToVis}}"
+                                                            Background="#2A2415"
+                                                            BorderBrush="{DynamicResource WarningBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="4"
+                                                            Margin="0,4,0,0"
+                                                            Padding="6,2">
+                                                        <TextBlock Text="{Binding MismatchWarning}"
+                                                                   FontSize="10"
+                                                                   Foreground="{DynamicResource WarningBrush}"
+                                                                   TextWrapping="Wrap" />
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <!-- Target Format Selector -->
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                                                    <TextBlock Text="To:"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,6,0" />
+                                                    <ComboBox ItemsSource="{Binding AvailableTargetFormats}"
+                                                              SelectedItem="{Binding TargetFormat, Mode=TwoWay}"
+                                                              DisplayMemberPath="PrimaryExtension"
+                                                              Width="90"
+                                                              IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBoolToVis}}" />
+                                                </StackPanel>
+
+                                                <!-- Status & Progress -->
+                                                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                    <TextBlock Text="{Binding StatusText}"
+                                                               FontSize="11"
+                                                               Foreground="{Binding Status, Converter={StaticResource StatusToColor}}"
+                                                               HorizontalAlignment="Right"
+                                                               Margin="0,0,0,4" />
+                                                    <ProgressBar Value="{Binding ProgressPercentage}"
+                                                                 Foreground="{Binding Status, Converter={StaticResource StatusToColor}}"
+                                                                 Height="4" />
+                                                </StackPanel>
+
+                                                <!-- Actions -->
+                                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource IconButtonStyle}"
+                                                            Command="{Binding DataContext.OpenAdvancedOptionsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Advanced Options"
+                                                            Margin="0,0,4,0">
+                                                        <TextBlock Text="⚙" FontSize="14" />
+                                                    </Button>
+                                                    <Button Style="{StaticResource IconButtonStyle}"
+                                                            Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Remove from queue">
+                                                        <TextBlock Text="✕" FontSize="13" Foreground="{DynamicResource ErrorBrush}" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <!-- 3. Bottom Action Bar (visible when queue has items) -->
+            <Border Grid.Row="2"
+                    Visibility="{Binding QueueManager.TotalCount, Converter={StaticResource CountToVis}}"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Margin="0,16,0,0"
+                    Padding="18,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: Batch Target & Output Directory -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Batch Target -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0" Visibility="{Binding BatchTargets.Count, Converter={StaticResource CountToVis}}">
+                            <TextBlock Text="Batch Target:" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ComboBox ItemsSource="{Binding BatchTargets}"
+                                      SelectedItem="{Binding SelectedBatchTarget, Mode=TwoWay}"
+                                      DisplayMemberPath="PrimaryExtension"
+                                      Width="100" />
+                        </StackPanel>
+
+                        <!-- Settings Preset -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
+                            <TextBlock Text="Preset:" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ComboBox SelectedValue="{Binding SelectedPreset, Mode=TwoWay}" Width="110">
+                                <models:QualityPreset>Auto</models:QualityPreset>
+                                <models:QualityPreset>BestQuality</models:QualityPreset>
+                                <models:QualityPreset>Balanced</models:QualityPreset>
+                                <models:QualityPreset>SmallerFile</models:QualityPreset>
+                                <models:QualityPreset>Lossless</models:QualityPreset>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Output Location -->
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Save To:" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ChooseOutputFolderCommand}" Padding="8,4" Margin="0,0,6,0">
+                                <TextBlock Text="📁 Change..." FontSize="11" />
+                            </Button>
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenOutputFolderCommand}" Padding="8,4">
+                                <TextBlock Text="Open Folder" FontSize="11" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Right: Primary Conversion Actions -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding PauseResumeCommand}"
+                                Margin="0,0,10,0"
+                                Visibility="{Binding QueueManager.IsRunning, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Pause" />
+                        </Button>
+
+                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding CancelAllCommand}"
+                                Margin="0,0,10,0"
+                                Visibility="{Binding QueueManager.IsRunning, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Cancel" />
+                        </Button>
+
+                        <Button Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding ConvertAllCommand}"
+                                IsEnabled="{Binding QueueManager.IsRunning, Converter={StaticResource InverseBoolToVis}}"
+                                Padding="28,10">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚡ " FontSize="14" />
+                                <TextBlock Text="Convert All Files" FontSize="14" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 4. MODALS & OVERLAYS -->
+
+        <!-- History Modal -->
+        <Grid Visibility="{Binding ActiveView, Converter={StaticResource NullToVis}}"
+              Background="#AA000000">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ActiveView}" Value="History">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Border Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Width="780" Height="500"
+                    Padding="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <TextBlock Text="Conversion History (SQLite)" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <Button Style="{StaticResource IconButtonStyle}" Command="{Binding CloseModalCommand}" HorizontalAlignment="Right">
+                            <TextBlock Text="✕" FontSize="16" />
+                        </Button>
+                    </Grid>
+
+                    <Border Grid.Row="1" Background="{DynamicResource AppCardBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="8">
+                        <ListView ItemsSource="{Binding RecentHistory}" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextPrimaryBrush}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Date" Width="130" DisplayMemberBinding="{Binding TimestampUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
+                                    <GridViewColumn Header="Source" Width="180" DisplayMemberBinding="{Binding SourceFilePath}" />
+                                    <GridViewColumn Header="Target" Width="180" DisplayMemberBinding="{Binding OutputFilePath}" />
+                                    <GridViewColumn Header="Engine" Width="100" DisplayMemberBinding="{Binding EngineUsed}" />
+                                    <GridViewColumn Header="Duration" Width="70" DisplayMemberBinding="{Binding DurationSeconds, StringFormat='{}{0:0.1}s'}" />
+                                    <GridViewColumn Header="Result" Width="70" DisplayMemberBinding="{Binding Success}" />
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Border>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ClearHistoryCommand}" Content="Clear History" Margin="0,0,10,0" />
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CloseModalCommand}" Content="Close" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Engines Modal -->
+        <Grid Background="#AA000000">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ActiveView}" Value="Engines">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Border Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Width="700" Height="520"
+                    Padding="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <TextBlock Text="Installed Conversion Engines &amp; Health" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <Button Style="{StaticResource IconButtonStyle}" Command="{Binding CloseModalCommand}" HorizontalAlignment="Right">
+                            <TextBlock Text="✕" FontSize="16" />
+                        </Button>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Engines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource AppCardBrush}"
+                                            BorderBrush="{DynamicResource AppBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Margin="0,0,0,8"
+                                            Padding="14,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                <TextBlock Text="{Binding StatusSummary}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
+                                                <TextBlock Text="{Binding License, StringFormat='License: {0}'}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,0" />
+                                            </StackPanel>
+
+                                            <Border Grid.Column="1"
+                                                    Background="{DynamicResource SuccessBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="8,4"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="ACTIVE" FontWeight="Bold" FontSize="10" Foreground="White" />
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <StackPanel Grid.Row="2" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CloseModalCommand}" Content="Done" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Settings Modal -->
+        <Grid Background="#AA000000">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ActiveView}" Value="Settings">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Border Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Width="600" Height="420"
+                    Padding="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,20">
+                        <TextBlock Text="Settings" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <Button Style="{StaticResource IconButtonStyle}" Command="{Binding CloseModalCommand}" HorizontalAlignment="Right">
+                            <TextBlock Text="✕" FontSize="16" />
+                        </Button>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1">
+                        <!-- Output Folder -->
+                        <TextBlock Text="Default Output Folder" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
+                        <Grid Margin="0,0,0,18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding OutputFolder, Mode=OneWay}" IsReadOnly="True" Background="{DynamicResource AppCardBrush}" Foreground="{DynamicResource TextPrimaryBrush}" BorderBrush="{DynamicResource AppBorderBrush}" Padding="8,6" />
+                            <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ChooseOutputFolderCommand}" Content="Browse" Margin="8,0,0,0" />
+                        </Grid>
+
+                        <!-- Overwrite Policy -->
+                        <TextBlock Text="File Name Collisions" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
+                        <ComboBox SelectedIndex="0" Margin="0,0,0,18">
+                            <ComboBoxItem Content="Create Unique Name (e.g. file (1).png) [Recommended]" />
+                            <ComboBoxItem Content="Prompt before overwriting" />
+                            <ComboBoxItem Content="Overwrite existing file" />
+                        </ComboBox>
+
+                        <!-- Privacy Notice -->
+                        <Border Background="{DynamicResource AppCardBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="🔒 100% Offline &amp; Private" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                <TextBlock Text="All conversions execute locally on your machine. No files, logs, or telemetry are ever uploaded." FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CloseModalCommand}" Content="Save &amp; Close" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Advanced Per-File Options Modal -->
+        <Grid Background="#AA000000">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ActiveView}" Value="Advanced">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Border Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Width="600" Height="480"
+                    Padding="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <TextBlock Text="{Binding SelectedJobItem.FileName, StringFormat='Options: {0}'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                        <Button Style="{StaticResource IconButtonStyle}" Command="{Binding CloseModalCommand}" HorizontalAlignment="Right">
+                            <TextBlock Text="✕" FontSize="16" />
+                        </Button>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1">
+                        <!-- Quality -->
+                        <TextBlock Text="Compression Quality (1 - 100)" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
+                        <Slider Minimum="1" Maximum="100" Value="{Binding SelectedJobItem.Options.QualityValue, Mode=TwoWay}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0,0,0,16" />
+
+                        <!-- Preserve Metadata Checkbox -->
+                        <CheckBox Content="Preserve File Metadata (EXIF, audio tags, timestamps)"
+                                  IsChecked="{Binding SelectedJobItem.Options.PreserveMetadata, Mode=TwoWay}"
+                                  Foreground="{DynamicResource TextPrimaryBrush}"
+                                  FontSize="13"
+                                  Margin="0,0,0,18" />
+
+                        <!-- Audio Bitrate -->
+                        <TextBlock Text="Audio Bitrate (kbps)" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
+                        <ComboBox SelectedValue="{Binding SelectedJobItem.Options.AudioBitrateKbps, Mode=TwoWay}" Margin="0,0,0,18">
+                            <ComboBoxItem Content="Auto (192 kbps)" />
+                            <ComboBoxItem Content="128 kbps (Compact)" />
+                            <ComboBoxItem Content="192 kbps (Standard)" />
+                            <ComboBoxItem Content="256 kbps (High)" />
+                            <ComboBoxItem Content="320 kbps (Maximum)" />
+                        </ComboBox>
+
+                        <!-- PDF DPI -->
+                        <TextBlock Text="PDF Rendering DPI" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
+                        <ComboBox SelectedValue="{Binding SelectedJobItem.Options.PdfDpi, Mode=TwoWay}" Margin="0,0,0,18">
+                            <ComboBoxItem Content="150 DPI (Draft)" />
+                            <ComboBoxItem Content="300 DPI (High Quality)" IsSelected="True" />
+                            <ComboBoxItem Content="600 DPI (Archival)" />
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CloseModalCommand}" Content="Apply" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Completion Notification Toast -->
+        <Border Visibility="{Binding IsToastVisible, Converter={StaticResource BoolToVis}}"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,16,24,0"
+                Background="{DynamicResource AppCardBrush}"
+                BorderBrush="{DynamicResource SuccessBrush}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16,12"
+                Width="360">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Conversion Complete" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource SuccessBrush}" />
+                    <TextBlock Text="{Binding ToastMessage}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,2,0,8" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenFileCommand}" CommandParameter="{Binding ToastFilePath}" Padding="8,4" Margin="0,0,8,0">
+                            <TextBlock Text="Open File" FontSize="11" />
+                        </Button>
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenOutputFolderCommand}" Padding="8,4">
+                            <TextBlock Text="Open Folder" FontSize="11" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Grid.Column="1" Style="{StaticResource IconButtonStyle}" VerticalAlignment="Top" Click="CloseToast_Click">
+                    <TextBlock Text="✕" FontSize="12" />
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

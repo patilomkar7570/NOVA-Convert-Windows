@@ -1,0 +1,19 @@
+## .NET & Visual Studio
+bin/
+obj/
+publish/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+## Dist & bundled large binaries (attached directly to GitHub Releases)
+dist/
+engines/
+
+## Temporary test outputs
+NOVA_Test_*
+NOVA_Verify_*
+*.tmp
+*.log

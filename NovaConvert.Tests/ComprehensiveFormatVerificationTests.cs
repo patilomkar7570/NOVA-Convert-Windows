@@ -50,6 +50,7 @@ public class ComprehensiveFormatVerificationTests : IDisposable
     [InlineData("png", "gif")]
     [InlineData("png", "ico")]
     [InlineData("png", "pdf")]
+    [InlineData("png", "tga")]
     [InlineData("jpg", "png")]
     public async Task ImageConversions_AllSupportedFormatsWork(string srcId, string tgtId)
     {
@@ -78,6 +79,7 @@ public class ComprehensiveFormatVerificationTests : IDisposable
     [InlineData("opus")]
     [InlineData("m4a")]
     [InlineData("wma")]
+    [InlineData("aiff")]
     public async Task AudioConversions_WavToAllSupportedAudioFormatsWork(string targetAudioId)
     {
         if (!_ffmpegEngine.IsAvailable) return;
@@ -102,6 +104,7 @@ public class ComprehensiveFormatVerificationTests : IDisposable
     [InlineData("webm")]
     [InlineData("mov")]
     [InlineData("avi")]
+    [InlineData("flv")]
     [InlineData("gif")]
     [InlineData("mp3")] // audio extraction
     public async Task VideoConversions_Mp4ToAllTargetsWork(string targetId)

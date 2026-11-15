@@ -21,12 +21,12 @@ public class FFmpegEngine : IConversionEngine
 
     private static readonly HashSet<string> AudioFormats = new(StringComparer.OrdinalIgnoreCase)
     {
-        "mp3", "wav", "flac", "aac", "m4a", "ogg", "opus", "wma"
+        "mp3", "wav", "flac", "aac", "m4a", "ogg", "opus", "wma", "aiff"
     };
 
     private static readonly HashSet<string> VideoFormats = new(StringComparer.OrdinalIgnoreCase)
     {
-        "mp4", "mkv", "webm", "mov", "avi", "wmv", "gif"
+        "mp4", "mkv", "webm", "mov", "avi", "wmv", "flv", "gif"
     };
 
     public FFmpegEngine()
@@ -333,6 +333,7 @@ public class FFmpegEngine : IConversionEngine
             "ogg" => "libvorbis",
             "opus" => "libopus",
             "wma" => "wmav2",
+            "aiff" => "pcm_s16be",
             _ => "aac"
         };
     }
@@ -347,6 +348,7 @@ public class FFmpegEngine : IConversionEngine
             "mkv" => "libx264",
             "avi" => "mpeg4",
             "wmv" => "wmv2",
+            "flv" => "flv1",
             _ => "libx264"
         };
     }
@@ -354,6 +356,7 @@ public class FFmpegEngine : IConversionEngine
     private static string ResolveAudioCodecForContainer(string containerId) => containerId.ToLowerInvariant() switch
     {
         "webm" => "libopus",
+        "flv" => "mp3",
         _ => "aac"
     };
 

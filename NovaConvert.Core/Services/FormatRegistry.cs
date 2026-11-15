@@ -152,6 +152,35 @@ public class FormatRegistry : IFormatRegistry
             CompatibleTargetFormatIds = new[] { "png", "jpg", "webp", "pdf" }
         });
 
+        Register(new FormatDefinition
+        {
+            Id = "tga",
+            Name = "Truevision TGA",
+            Category = FileCategory.Image,
+            PrimaryExtension = ".tga",
+            MimeType = "image/x-tga",
+            SupportsLossless = true,
+            SupportsTransparency = true,
+            SupportsMetadata = false,
+            Description = "Raster graphic format commonly used in game development.",
+            CompatibleTargetFormatIds = new[] { "png", "jpg", "webp", "bmp" }
+        });
+
+        Register(new FormatDefinition
+        {
+            Id = "psd",
+            Name = "Adobe Photoshop Document",
+            Category = FileCategory.Image,
+            PrimaryExtension = ".psd",
+            MimeType = "image/vnd.adobe.photoshop",
+            Signatures = new[] { new byte[] { 0x38, 0x42, 0x50, 0x53 } }, // 8BPS
+            SupportsLossless = true,
+            SupportsTransparency = true,
+            SupportsMetadata = true,
+            Description = "Layered Adobe Photoshop image format.",
+            CompatibleTargetFormatIds = new[] { "png", "jpg", "webp", "tiff", "pdf" }
+        });
+
         // ------------------ AUDIO ------------------
         Register(new FormatDefinition
         {
@@ -262,7 +291,22 @@ public class FormatRegistry : IFormatRegistry
             SupportsLossless = false,
             SupportsMetadata = true,
             Description = "Legacy proprietary Microsoft audio format.",
-            CompatibleTargetFormatIds = new[] { "mp3", "wav", "flac", "aac", "m4a", "ogg" }
+            CompatibleTargetFormatIds = new[] { "mp3", "wav", "flac", "aac", "m4a", "ogg", "opus", "aiff" }
+        });
+
+        Register(new FormatDefinition
+        {
+            Id = "aiff",
+            Name = "Audio Interchange File Format",
+            Category = FileCategory.Audio,
+            PrimaryExtension = ".aiff",
+            AlternativeExtensions = new[] { ".aif" },
+            MimeType = "audio/aiff",
+            Signatures = new[] { new byte[] { 0x46, 0x4F, 0x52, 0x4D } }, // FORM
+            SupportsLossless = true,
+            SupportsMetadata = true,
+            Description = "Uncompressed audio standard developed by Apple.",
+            CompatibleTargetFormatIds = new[] { "mp3", "wav", "flac", "aac", "m4a", "ogg", "opus" }
         });
 
         // ------------------ VIDEO ------------------
@@ -346,6 +390,20 @@ public class FormatRegistry : IFormatRegistry
             SupportsLossless = false,
             SupportsMetadata = true,
             Description = "Microsoft proprietary video compression format.",
+            CompatibleTargetFormatIds = new[] { "mp4", "mkv", "webm", "mov", "avi", "flv", "mp3", "wav" }
+        });
+
+        Register(new FormatDefinition
+        {
+            Id = "flv",
+            Name = "Flash Video",
+            Category = FileCategory.Video,
+            PrimaryExtension = ".flv",
+            MimeType = "video/x-flv",
+            Signatures = new[] { new byte[] { 0x46, 0x4C, 0x56, 0x01 } }, // FLV\x01
+            SupportsLossless = false,
+            SupportsMetadata = true,
+            Description = "Adobe Flash video streaming format.",
             CompatibleTargetFormatIds = new[] { "mp4", "mkv", "webm", "mov", "avi", "mp3", "wav" }
         });
 

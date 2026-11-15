@@ -67,15 +67,11 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenSettingsCommand}" Margin="0,0,8,0" Padding="12,6">
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenSettingsCommand}" Padding="12,6">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="⚙" Margin="0,0,6,0" FontSize="12" />
                             <TextBlock Text="Settings" FontSize="12" />
                         </StackPanel>
-                    </Button>
-
-                    <Button Style="{StaticResource IconButtonStyle}" Command="{Binding ToggleThemeCommand}" ToolTip="Toggle Light / Dark Theme" Width="34" Height="34">
-                        <TextBlock Text="◐" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Button>
                 </StackPanel>
             </Grid>
@@ -357,19 +353,8 @@
         <!-- 4. MODALS & OVERLAYS -->
 
         <!-- History Modal -->
-        <Grid Visibility="{Binding ActiveView, Converter={StaticResource NullToVis}}"
+        <Grid Visibility="{Binding IsHistoryOpen, Converter={StaticResource BoolToVis}}"
               Background="#AA000000">
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Setter Property="Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding ActiveView}" Value="History">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
-
             <Border Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1"
@@ -414,18 +399,8 @@
         </Grid>
 
         <!-- Engines Modal -->
-        <Grid Background="#AA000000">
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Setter Property="Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding ActiveView}" Value="Engines">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
-
+        <Grid Visibility="{Binding IsEnginesOpen, Converter={StaticResource BoolToVis}}"
+              Background="#AA000000">
             <Border Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1"
@@ -490,23 +465,13 @@
         </Grid>
 
         <!-- Settings Modal -->
-        <Grid Background="#AA000000">
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Setter Property="Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding ActiveView}" Value="Settings">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
-
+        <Grid Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVis}}"
+              Background="#AA000000">
             <Border Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="14"
-                    Width="600" Height="420"
+                    Width="600" Height="490"
                     Padding="24">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -523,6 +488,14 @@
                     </Grid>
 
                     <StackPanel Grid.Row="1">
+                        <!-- Appearance Theme -->
+                        <TextBlock Text="Appearance Theme" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
+                        <ComboBox SelectedValue="{Binding SelectedTheme, Mode=TwoWay}" SelectedValuePath="Tag" Margin="0,0,0,18">
+                            <ComboBoxItem Content="Auto (System Default)" Tag="Auto" />
+                            <ComboBoxItem Content="Dark Theme" Tag="Dark" />
+                            <ComboBoxItem Content="Light Theme" Tag="Light" />
+                        </ComboBox>
+
                         <!-- Output Folder -->
                         <TextBlock Text="Default Output Folder" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
                         <Grid Margin="0,0,0,18">
@@ -559,18 +532,8 @@
         </Grid>
 
         <!-- Advanced Per-File Options Modal -->
-        <Grid Background="#AA000000">
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Setter Property="Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding ActiveView}" Value="Advanced">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
-
+        <Grid Visibility="{Binding IsAdvancedOpen, Converter={StaticResource BoolToVis}}"
+              Background="#AA000000">
             <Border Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1"

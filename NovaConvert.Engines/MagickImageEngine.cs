@@ -17,7 +17,7 @@ public class MagickImageEngine : IConversionEngine
 
     private static readonly HashSet<string> SupportedImageFormats = new(StringComparer.OrdinalIgnoreCase)
     {
-        "png", "jpg", "jpeg", "webp", "tiff", "tif", "bmp", "gif", "ico", "avif", "svg"
+        "png", "jpg", "jpeg", "webp", "tiff", "tif", "bmp", "gif", "ico", "avif", "svg", "tga", "psd"
     };
 
     public bool CanConvert(FormatDefinition source, FormatDefinition target)

@@ -36,7 +36,7 @@ public class AppSettings
     public string OutputDirectory { get; set; } = string.Empty;
     public bool SaveInSourceDirectory { get; set; } = false;
     public OverwriteAction OverwritePolicy { get; set; } = OverwriteAction.CreateUniqueName;
-    public string Theme { get; set; } = "Dark"; // "Dark", "Light", "System"
+    public string Theme { get; set; } = "Auto"; // "Auto", "Dark", "Light"
     public bool AutoCheckUpdates { get; set; } = true;
     public int MaxConcurrentJobs { get; set; } = 2;
     public bool PreserveMetadataByDefault { get; set; } = true;

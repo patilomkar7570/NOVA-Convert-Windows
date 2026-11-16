@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">NOVA Convert</string>
+    <string name="tagline">Every format. One place.</string>
+    <string name="select_file">Select File to Convert</string>
+    <string name="convert_now">Convert Now</string>
+    <string name="select_target_format">Select Target Format</string>
+    <string name="offline_badge">100% Offline &amp; Private</string>
+</resources>

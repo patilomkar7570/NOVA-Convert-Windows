@@ -17,3 +17,8 @@ NOVA_Test_*
 NOVA_Verify_*
 *.tmp
 *.log
+
+## Android Build Outputs & Keystores
+android/build/
+*.jks
+*.keystore

@@ -407,6 +407,62 @@ public class FormatRegistry : IFormatRegistry
             CompatibleTargetFormatIds = new[] { "mp4", "mkv", "webm", "mov", "avi", "mp3", "wav" }
         });
 
+        Register(new FormatDefinition
+        {
+            Id = "ts",
+            Name = "MPEG Transport Stream",
+            Category = FileCategory.Video,
+            PrimaryExtension = ".ts",
+            MimeType = "video/mp2t",
+            Signatures = new[] { new byte[] { 0x47 } },
+            SupportsLossless = false,
+            SupportsMetadata = true,
+            Description = "Standard format for broadcast transmission and streaming.",
+            CompatibleTargetFormatIds = new[] { "mp4", "mkv", "webm", "mov", "avi", "mp3", "wav" }
+        });
+
+        Register(new FormatDefinition
+        {
+            Id = "mpg",
+            Name = "MPEG Program Stream",
+            Category = FileCategory.Video,
+            PrimaryExtension = ".mpg",
+            AlternativeExtensions = new[] { ".mpeg" },
+            MimeType = "video/mpeg",
+            Signatures = new[] { new byte[] { 0x00, 0x00, 0x01, 0xBA } },
+            SupportsLossless = false,
+            SupportsMetadata = true,
+            Description = "MPEG-1 and MPEG-2 media stream format commonly used in DVDs.",
+            CompatibleTargetFormatIds = new[] { "mp4", "mkv", "webm", "avi", "mp3", "wav" }
+        });
+
+        Register(new FormatDefinition
+        {
+            Id = "3gp",
+            Name = "3GPP Multimedia File",
+            Category = FileCategory.Video,
+            PrimaryExtension = ".3gp",
+            MimeType = "video/3gpp",
+            SupportsLossless = false,
+            SupportsMetadata = true,
+            Description = "Compact mobile multimedia container.",
+            CompatibleTargetFormatIds = new[] { "mp4", "mkv", "webm", "avi", "mp3", "wav" }
+        });
+
+        Register(new FormatDefinition
+        {
+            Id = "ogv",
+            Name = "Ogg Video",
+            Category = FileCategory.Video,
+            PrimaryExtension = ".ogv",
+            MimeType = "video/ogg",
+            Signatures = new[] { new byte[] { 0x4F, 0x67, 0x67, 0x53 } },
+            SupportsLossless = false,
+            SupportsMetadata = true,
+            Description = "Open video container with Theora and Vorbis encoding.",
+            CompatibleTargetFormatIds = new[] { "mp4", "mkv", "webm", "mp3", "ogg" }
+        });
+
         // ------------------ PDF ------------------
         Register(new FormatDefinition
         {
@@ -535,6 +591,22 @@ public class FormatRegistry : IFormatRegistry
             SupportsMetadata = false,
             Description = "Structured data format.",
             CompatibleTargetFormatIds = new[] { "csv" }
+        });
+
+        // ------------------ PRESENTATIONS ------------------
+        Register(new FormatDefinition
+        {
+            Id = "pptx",
+            Name = "Microsoft PowerPoint Presentation",
+            Category = FileCategory.Presentation,
+            PrimaryExtension = ".pptx",
+            MimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            Signatures = new[] { new byte[] { 0x50, 0x4B, 0x03, 0x04 } },
+            SupportsLossless = false,
+            SupportsMetadata = true,
+            Description = "OpenXML presentation format used by Microsoft PowerPoint.",
+            CompatibleTargetFormatIds = new[] { "txt", "md", "pdf" },
+            KnownLimitations = new[] { "Slide text extraction captures slide contents; layout and transitions are discarded." }
         });
 
         // ------------------ E-BOOKS ------------------
@@ -741,7 +813,7 @@ public class FormatRegistry : IFormatRegistry
             (headerBytes[2] == 0x03 || headerBytes[2] == 0x05 || headerBytes[2] == 0x07))
         {
             var extFmt = GetFormatByExtension(fallbackExtension);
-            if (extFmt != null && (extFmt.Id == "docx" || extFmt.Id == "xlsx" || extFmt.Id == "epub"))
+            if (extFmt != null && (extFmt.Id == "docx" || extFmt.Id == "xlsx" || extFmt.Id == "pptx" || extFmt.Id == "epub"))
                 return extFmt;
             return GetFormatById("zip");
         }

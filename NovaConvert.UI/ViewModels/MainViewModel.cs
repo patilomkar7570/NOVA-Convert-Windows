@@ -38,7 +38,12 @@ public class MainViewModel : INotifyPropertyChanged
     public IReadOnlyList<IConversionEngine> Engines => _engineManager.Engines;
 
     private string _selectedTheme = "Auto";
-    public ObservableCollection<string> AvailableThemes { get; } = new() { "Auto", "Dark", "Light" };
+    public ObservableCollection<ThemeOption> AvailableThemes { get; } = new()
+    {
+        new("Auto", "Auto (System Default)"),
+        new("Dark", "Dark Theme"),
+        new("Light", "Light Theme")
+    };
 
     public string ActiveView
     {
@@ -173,7 +178,6 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand OpenSettingsCommand { get; }
     public ICommand OpenAdvancedOptionsCommand { get; }
     public ICommand CloseModalCommand { get; }
-    public ICommand ToggleThemeCommand { get; }
     public ICommand ClearHistoryCommand { get; }
     public ICommand RetryFailedCommand { get; }
 
@@ -234,13 +238,24 @@ public class MainViewModel : INotifyPropertyChanged
             }
         });
         CloseModalCommand = new RelayCommand(() => ActiveView = "Converter");
-        ToggleThemeCommand = new RelayCommand(() => IsDarkMode = !IsDarkMode);
         ClearHistoryCommand = new AsyncRelayCommand(async () =>
         {
             await _historyRepository.ClearHistoryAsync();
             RecentHistory.Clear();
         });
         RetryFailedCommand = new AsyncRelayCommand(() => _queueManager.RetryFailedAsync());
+
+        // Listen for Windows system theme changes dynamically
+        SystemEvents.UserPreferenceChanged += (s, e) =>
+        {
+            if (e.Category == UserPreferenceCategory.General || e.Category == UserPreferenceCategory.Color)
+            {
+                if (string.Equals(_selectedTheme, "Auto", StringComparison.OrdinalIgnoreCase))
+                {
+                    Application.Current?.Dispatcher.Invoke(ApplyTheme);
+                }
+            }
+        };
     }
 
     public async Task InitializeAsync()
@@ -265,7 +280,7 @@ public class MainViewModel : INotifyPropertyChanged
         {
             Multiselect = true,
             Title = "Select Files to Convert — NOVA Convert",
-            Filter = "All Supported Files|*.png;*.jpg;*.jpeg;*.webp;*.tiff;*.bmp;*.gif;*.ico;*.svg;*.avif;*.tga;*.psd;*.mp3;*.wav;*.flac;*.aac;*.m4a;*.ogg;*.opus;*.wma;*.aiff;*.aif;*.mp4;*.mkv;*.mov;*.webm;*.avi;*.wmv;*.flv;*.pdf;*.docx;*.txt;*.md;*.html;*.rtf;*.xlsx;*.csv;*.json;*.epub;*.zip;*.7z;*.tar;*.gz|All Files (*.*)|*.*"
+            Filter = "All Supported Files|*.png;*.jpg;*.jpeg;*.webp;*.tiff;*.bmp;*.gif;*.ico;*.svg;*.avif;*.tga;*.psd;*.mp3;*.wav;*.flac;*.aac;*.m4a;*.ogg;*.opus;*.wma;*.aiff;*.aif;*.mp4;*.mkv;*.mov;*.webm;*.avi;*.wmv;*.flv;*.ts;*.mpg;*.mpeg;*.3gp;*.ogv;*.pdf;*.docx;*.pptx;*.txt;*.md;*.html;*.rtf;*.xlsx;*.csv;*.json;*.epub;*.zip;*.7z;*.tar;*.gz|All Files (*.*)|*.*"
         };
 
         if (dialog.ShowDialog() == true)
@@ -424,6 +439,7 @@ public class MainViewModel : INotifyPropertyChanged
         var border = isDark ? Color.FromRgb(46, 52, 70) : Color.FromRgb(226, 232, 240);
         var textPrimary = isDark ? Color.FromRgb(241, 245, 249) : Color.FromRgb(15, 23, 42);
         var textSecondary = isDark ? Color.FromRgb(148, 163, 184) : Color.FromRgb(100, 116, 139);
+        var textMuted = isDark ? Color.FromRgb(100, 116, 139) : Color.FromRgb(148, 163, 184);
 
         app.Resources["AppBgBrush"] = new SolidColorBrush(bg);
         app.Resources["AppSurfaceBrush"] = new SolidColorBrush(surface);
@@ -431,9 +447,12 @@ public class MainViewModel : INotifyPropertyChanged
         app.Resources["AppBorderBrush"] = new SolidColorBrush(border);
         app.Resources["TextPrimaryBrush"] = new SolidColorBrush(textPrimary);
         app.Resources["TextSecondaryBrush"] = new SolidColorBrush(textSecondary);
+        app.Resources["TextMutedBrush"] = new SolidColorBrush(textMuted);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
+
+public record ThemeOption(string Key, string DisplayName);

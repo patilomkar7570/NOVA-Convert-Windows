@@ -18,11 +18,11 @@ public class DocumentEngine : IConversionEngine
     public string? LibreOfficePath { get; private set; }
     public string? PandocPath { get; private set; }
 
-    public IReadOnlyList<FileCategory> SupportedCategories => new[] { FileCategory.Document };
+    public IReadOnlyList<FileCategory> SupportedCategories => new[] { FileCategory.Document, FileCategory.Presentation };
 
     private static readonly HashSet<string> BuiltInSupportedInput = new(StringComparer.OrdinalIgnoreCase)
     {
-        "docx", "txt", "md", "html"
+        "docx", "txt", "md", "html", "pptx"
     };
 
     public DocumentEngine()
@@ -106,6 +106,20 @@ public class DocumentEngine : IConversionEngine
                    target.Id.Equals("md", StringComparison.OrdinalIgnoreCase);
         }
 
+        // pptx -> txt, md, pdf
+        if (source.Id.Equals("pptx", StringComparison.OrdinalIgnoreCase))
+        {
+            if (target.Id.Equals("txt", StringComparison.OrdinalIgnoreCase) ||
+                target.Id.Equals("md", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            if (target.Id.Equals("pdf", StringComparison.OrdinalIgnoreCase) && LibreOfficePath != null)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -123,8 +137,8 @@ public class DocumentEngine : IConversionEngine
 
         try
         {
-            // LibreOffice headless conversion if docx -> pdf
-            if (source.Id.Equals("docx", StringComparison.OrdinalIgnoreCase) &&
+            // LibreOffice headless conversion if docx/pptx -> pdf
+            if ((source.Id.Equals("docx", StringComparison.OrdinalIgnoreCase) || source.Id.Equals("pptx", StringComparison.OrdinalIgnoreCase)) &&
                 target.Id.Equals("pdf", StringComparison.OrdinalIgnoreCase) &&
                 LibreOfficePath != null)
             {
@@ -140,6 +154,10 @@ public class DocumentEngine : IConversionEngine
                 if (source.Id.Equals("docx", StringComparison.OrdinalIgnoreCase))
                 {
                     ConvertDocx(sourcePath, targetPath, target.Id);
+                }
+                else if (source.Id.Equals("pptx", StringComparison.OrdinalIgnoreCase))
+                {
+                    ConvertPptx(sourcePath, targetPath, target.Id);
                 }
                 else if (source.Id.Equals("txt", StringComparison.OrdinalIgnoreCase))
                 {
@@ -309,15 +327,45 @@ public class DocumentEngine : IConversionEngine
         File.WriteAllText(targetPath, text.Trim(), Encoding.UTF8);
     }
 
+    private static void ConvertPptx(string sourcePath, string targetPath, string targetId)
+    {
+        using var presentationDoc = PresentationDocument.Open(sourcePath, false);
+        var presentationPart = presentationDoc.PresentationPart;
+        var sb = new StringBuilder();
+
+        if (presentationPart?.Presentation?.SlideIdList is { } slideIdList)
+        {
+            int slideIndex = 1;
+            foreach (var slideId in slideIdList.ChildElements)
+            {
+                if (slideId is DocumentFormat.OpenXml.Presentation.SlideId sId && sId.RelationshipId?.Value is string relId)
+                {
+                    if (presentationPart.GetPartById(relId) is SlidePart slidePart && slidePart.Slide != null)
+                    {
+                        var texts = slidePart.Slide.Descendants<DocumentFormat.OpenXml.Drawing.Text>().Select(t => t.Text);
+                        sb.AppendLine($"--- Slide {slideIndex++} ---");
+                        sb.AppendLine(string.Join(" ", texts));
+                        sb.AppendLine();
+                    }
+                }
+            }
+        }
+
+        File.WriteAllText(targetPath, sb.ToString(), Encoding.UTF8);
+    }
+
     private async Task<ConversionResult> ConvertWithLibreOfficeAsync(string sourcePath, string targetPath, CancellationToken cancellationToken)
     {
         var sw = Stopwatch.StartNew();
         var targetDir = Path.GetDirectoryName(targetPath) ?? Directory.GetCurrentDirectory();
 
+        var safeOutDir = targetDir.Replace("\"", "\\\"");
+        var safeSource = sourcePath.Replace("\"", "\\\"");
+
         var psi = new ProcessStartInfo
         {
             FileName = LibreOfficePath!,
-            Arguments = $"--headless --convert-to pdf --outdir \"{targetDir}\" \"{sourcePath}\"",
+            Arguments = $"--headless --convert-to pdf --outdir \"{safeOutDir}\" \"{safeSource}\"",
             UseShellExecute = false,
             CreateNoWindow = true
         };

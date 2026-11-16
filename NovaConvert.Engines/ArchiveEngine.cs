@@ -68,6 +68,7 @@ public class ArchiveEngine : IConversionEngine
                     gzStream.CopyTo(outStream);
                 }
 
+
                 progress?.Report(0.5);
                 cancellationToken.ThrowIfCancellationRequested();
 

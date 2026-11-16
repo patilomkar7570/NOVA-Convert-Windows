@@ -175,6 +175,8 @@ public class MagickImageEngine : IConversionEngine
         "avif" => MagickFormat.Avif,
         "svg" => MagickFormat.Svg,
         "pdf" => MagickFormat.Pdf,
+        "tga" => MagickFormat.Tga,
+        "psd" => MagickFormat.Psd,
         _ => MagickFormat.Png
     };
 }

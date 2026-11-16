@@ -21,12 +21,12 @@ public class FFmpegEngine : IConversionEngine
 
     private static readonly HashSet<string> AudioFormats = new(StringComparer.OrdinalIgnoreCase)
     {
-        "mp3", "wav", "flac", "aac", "m4a", "ogg", "opus", "wma", "aiff"
+        "mp3", "wav", "flac", "aac", "m4a", "ogg", "opus", "wma", "aiff", "aif"
     };
 
     private static readonly HashSet<string> VideoFormats = new(StringComparer.OrdinalIgnoreCase)
     {
-        "mp4", "mkv", "webm", "mov", "avi", "wmv", "flv", "gif"
+        "mp4", "mkv", "webm", "mov", "avi", "wmv", "flv", "gif", "ts", "mpg", "mpeg", "3gp", "ogv"
     };
 
     public FFmpegEngine()
@@ -223,15 +223,18 @@ public class FFmpegEngine : IConversionEngine
     private string BuildFFmpegArguments(string sourcePath, string targetPath, FormatDefinition source, FormatDefinition target, ConversionOptions options)
     {
         var sb = new StringBuilder();
+        var safeSource = sourcePath.Replace("\"", "\\\"");
+        var safeTarget = targetPath.Replace("\"", "\\\"");
+
         sb.Append("-y -hide_banner "); // Overwrite output and hide banner
-        sb.Append($"-i \"{sourcePath}\" ");
+        sb.Append($"-i \"{safeSource}\" ");
 
         // If converting video to GIF
         if (target.Id.Equals("gif", StringComparison.OrdinalIgnoreCase))
         {
             int fps = options.VideoFps ?? 15;
             sb.Append($"-vf \"fps={fps},scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" ");
-            sb.Append($"\"{targetPath}\"");
+            sb.Append($"\"{safeTarget}\"");
             return sb.ToString();
         }
 
@@ -273,10 +276,15 @@ public class FFmpegEngine : IConversionEngine
             var vcodec = ResolveVideoCodec(target.Id, options.VideoCodec);
             if (!string.IsNullOrEmpty(vcodec)) sb.Append($"-c:v {vcodec} ");
 
-            // Resolution / scaling
+            // Resolution / scaling with sanitization
             if (!string.IsNullOrWhiteSpace(options.VideoResolution))
             {
-                sb.Append($"-vf scale={options.VideoResolution} ");
+                var cleanRes = Regex.Replace(options.VideoResolution.Trim(), @"[^0-9xX:\-]", "");
+                if (!string.IsNullOrEmpty(cleanRes))
+                {
+                    cleanRes = cleanRes.Replace('x', ':').Replace('X', ':');
+                    sb.Append($"-vf scale={cleanRes} ");
+                }
             }
 
             // Frame rate
@@ -317,13 +325,13 @@ public class FFmpegEngine : IConversionEngine
             sb.Append("-map_metadata -1 ");
         }
 
-        sb.Append($"\"{targetPath}\"");
+        sb.Append($"\"{safeTarget}\"");
         return sb.ToString();
     }
 
     private static string ResolveAudioCodec(string targetId, string? userCodec)
     {
-        if (!string.IsNullOrWhiteSpace(userCodec)) return userCodec;
+        if (!string.IsNullOrWhiteSpace(userCodec) && Regex.IsMatch(userCodec, @"^[a-zA-Z0-9_\-]+$")) return userCodec;
         return targetId.ToLowerInvariant() switch
         {
             "mp3" => "libmp3lame",
@@ -333,14 +341,14 @@ public class FFmpegEngine : IConversionEngine
             "ogg" => "libvorbis",
             "opus" => "libopus",
             "wma" => "wmav2",
-            "aiff" => "pcm_s16be",
+            "aiff" or "aif" => "pcm_s16be",
             _ => "aac"
         };
     }
 
     private static string ResolveVideoCodec(string targetId, string? userCodec)
     {
-        if (!string.IsNullOrWhiteSpace(userCodec)) return userCodec;
+        if (!string.IsNullOrWhiteSpace(userCodec) && Regex.IsMatch(userCodec, @"^[a-zA-Z0-9_\-]+$")) return userCodec;
         return targetId.ToLowerInvariant() switch
         {
             "mp4" or "mov" => "libx264",
@@ -349,6 +357,10 @@ public class FFmpegEngine : IConversionEngine
             "avi" => "mpeg4",
             "wmv" => "wmv2",
             "flv" => "flv1",
+            "ts" => "libx264",
+            "mpg" or "mpeg" => "mpeg2video",
+            "3gp" => "h263",
+            "ogv" => "libtheora",
             _ => "libx264"
         };
     }
@@ -357,6 +369,9 @@ public class FFmpegEngine : IConversionEngine
     {
         "webm" => "libopus",
         "flv" => "mp3",
+        "ogv" => "libvorbis",
+        "3gp" => "amr_nb",
+        "mpg" or "mpeg" => "mp2",
         _ => "aac"
     };
 

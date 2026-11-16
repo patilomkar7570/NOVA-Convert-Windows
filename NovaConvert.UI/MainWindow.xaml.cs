@@ -1,5 +1,6 @@
 ﻿using NovaConvert.UI.ViewModels;
 using System.Windows;
+using System.Windows.Input;
 
 namespace NovaConvert.UI;
 
@@ -41,5 +42,18 @@ public partial class MainWindow : Window
         {
             vm.IsToastVisible = false;
         }
+    }
+
+    private void Backdrop_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.CloseModalCommand.Execute(null);
+        }
+    }
+
+    private void Dialog_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
     }
 }

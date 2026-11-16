@@ -17,6 +17,10 @@
         Drop="Window_Drop"
         DragOver="Window_DragOver">
 
+    <Window.InputBindings>
+        <KeyBinding Key="Escape" Command="{Binding CloseModalCommand}" />
+    </Window.InputBindings>
+
     <Grid>
         <!-- Background subtle glow -->
         <Border HorizontalAlignment="Center" VerticalAlignment="Top" Width="600" Height="200" Margin="0,-100,0,0" Opacity="0.12">
@@ -354,13 +358,15 @@
 
         <!-- History Modal -->
         <Grid Visibility="{Binding IsHistoryOpen, Converter={StaticResource BoolToVis}}"
-              Background="#AA000000">
+              Background="#AA000000"
+              MouseDown="Backdrop_MouseDown">
             <Border Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="14"
                     Width="780" Height="500"
-                    Padding="24">
+                    Padding="24"
+                    MouseDown="Dialog_MouseDown">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -369,7 +375,7 @@
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Margin="0,0,0,16">
-                        <TextBlock Text="Conversion History (SQLite)" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Conversion History" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
                         <Button Style="{StaticResource IconButtonStyle}" Command="{Binding CloseModalCommand}" HorizontalAlignment="Right">
                             <TextBlock Text="✕" FontSize="16" />
                         </Button>
@@ -400,13 +406,15 @@
 
         <!-- Engines Modal -->
         <Grid Visibility="{Binding IsEnginesOpen, Converter={StaticResource BoolToVis}}"
-              Background="#AA000000">
+              Background="#AA000000"
+              MouseDown="Backdrop_MouseDown">
             <Border Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="14"
                     Width="700" Height="520"
-                    Padding="24">
+                    Padding="24"
+                    MouseDown="Dialog_MouseDown">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -466,13 +474,15 @@
 
         <!-- Settings Modal -->
         <Grid Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVis}}"
-              Background="#AA000000">
+              Background="#AA000000"
+              MouseDown="Backdrop_MouseDown">
             <Border Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="14"
                     Width="600" Height="490"
-                    Padding="24">
+                    Padding="24"
+                    MouseDown="Dialog_MouseDown">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -490,11 +500,7 @@
                     <StackPanel Grid.Row="1">
                         <!-- Appearance Theme -->
                         <TextBlock Text="Appearance Theme" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
-                        <ComboBox SelectedValue="{Binding SelectedTheme, Mode=TwoWay}" SelectedValuePath="Tag" Margin="0,0,0,18">
-                            <ComboBoxItem Content="Auto (System Default)" Tag="Auto" />
-                            <ComboBoxItem Content="Dark Theme" Tag="Dark" />
-                            <ComboBoxItem Content="Light Theme" Tag="Light" />
-                        </ComboBox>
+                        <ComboBox ItemsSource="{Binding AvailableThemes}" SelectedValue="{Binding SelectedTheme, Mode=TwoWay}" SelectedValuePath="Key" DisplayMemberPath="DisplayName" Margin="0,0,0,18" />
 
                         <!-- Output Folder -->
                         <TextBlock Text="Default Output Folder" FontWeight="Medium" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
@@ -533,13 +539,15 @@
 
         <!-- Advanced Per-File Options Modal -->
         <Grid Visibility="{Binding IsAdvancedOpen, Converter={StaticResource BoolToVis}}"
-              Background="#AA000000">
+              Background="#AA000000"
+              MouseDown="Backdrop_MouseDown">
             <Border Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="14"
                     Width="600" Height="480"
-                    Padding="24">
+                    Padding="24"
+                    MouseDown="Dialog_MouseDown">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

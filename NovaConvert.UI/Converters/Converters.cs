@@ -92,6 +92,7 @@ public class FormatCategoryToBadgeBrushConverter : IValueConverter
                 FileCategory.Pdf => new SolidColorBrush(Color.FromArgb(40, 239, 68, 68)),         // Red tint
                 FileCategory.Archive => new SolidColorBrush(Color.FromArgb(40, 245, 158, 11)),    // Amber tint
                 FileCategory.Ebook => new SolidColorBrush(Color.FromArgb(40, 139, 92, 246)),      // Violet tint
+                FileCategory.Presentation => new SolidColorBrush(Color.FromArgb(40, 249, 115, 22)),// Orange tint
                 _ => new SolidColorBrush(Color.FromArgb(40, 100, 116, 139))
             };
         }

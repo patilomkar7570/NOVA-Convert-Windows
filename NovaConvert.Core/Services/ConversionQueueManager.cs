@@ -318,6 +318,7 @@ public class ConversionQueueManager : IConversionQueueManager
                 item.Status = JobStatus.Failed;
                 item.StatusText = "Conversion Failed";
                 item.ErrorMessage = result.ErrorMessage ?? "Conversion failed without details.";
+                try { if (File.Exists(outputPath)) File.Delete(outputPath); } catch { }
 
                 await _historyRepository.AddEntryAsync(new HistoryEntry
                 {
@@ -339,12 +340,14 @@ public class ConversionQueueManager : IConversionQueueManager
         {
             item.Status = JobStatus.Cancelled;
             item.StatusText = "Cancelled";
+            try { if (File.Exists(outputPath)) File.Delete(outputPath); } catch { }
         }
         catch (Exception ex)
         {
             item.Status = JobStatus.Failed;
             item.StatusText = "Error";
             item.ErrorMessage = ex.Message;
+            try { if (File.Exists(outputPath)) File.Delete(outputPath); } catch { }
         }
         finally
         {
